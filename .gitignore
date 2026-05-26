@@ -1,37 +1,82 @@
-# Virtual environment
-venv/
-.venv/
-env/
-
-# Trained model outputs
-models/
-
-# Dataset files (often large; re-generate with prepare_data.py)
-data/
-
-# Python bytecode
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyd
+*.pyw
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
 
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
+# ── Virtual environments ──────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
 
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
-.idea/
-.vscode/
-*.swp
-
-# Env files
+# ── Environment / secrets ─────────────────────────────────────────────────────
 .env
-*.env
+.env.*
+!.env.example
+!.env.*.example
+api/.env
 
-# Logs & temp
+# ── Model weights (live on HuggingFace, not GitHub) ──────────────────────────
+models/
+
+# ── Training data (re-generate with prepare_data.py) ─────────────────────────
+data/
+
+# ── HuggingFace cache ─────────────────────────────────────────────────────────
+.cache/
+~/.cache/huggingface/
+
+# ── Logs & experiment tracking ────────────────────────────────────────────────
 *.log
 runs/
 wandb/
+lightning_logs/
+mlruns/
+outputs/
+
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Next.js (web/) ────────────────────────────────────────────────────────────
+web/.next/
+web/out/
+web/node_modules/
+web/npm-debug.log*
+web/yarn-debug.log*
+web/yarn-error.log*
+web/.pnp/
+web/.pnp.js
+web/.env.local
+web/.env.development.local
+web/.env.test.local
+web/.env.production.local
+web/next-env.d.ts
+
+# ── FastAPI (api/) ────────────────────────────────────────────────────────────
+api/__pycache__/
+api/*.py[cod]
+api/.env
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
