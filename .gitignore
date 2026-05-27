@@ -80,3 +80,12 @@ $RECYCLE.BIN/
 *.swp
 *.swo
 *~
+
+
+# ── HuggingFace Space clone (separate repo, deployed separately) ─────────────
+sentiment-api/
+
+# ── One-off helper scripts ────────────────────────────────────────────────────
+fix_config.py
+plan.txt
+

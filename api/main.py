@@ -1,15 +1,25 @@
 import os
-import httpx
+from contextlib import asynccontextmanager
+
+import torch
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-MODEL_ID    = "yahyasafdari/setiment_prediction"
-HF_API_URL  = f"https://api-inference.huggingface.co/models/{MODEL_ID}"
-HF_TOKEN    = os.getenv("HF_TOKEN", "")
+MODEL_ID        = "yahyasafdari/setiment_prediction"
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")]
 
-app = FastAPI(title="Sentiment Prediction API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    app.state.model     = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
+    app.state.model.eval()
+    yield
+
+
+app = FastAPI(title="Sentiment Prediction API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,26 +47,21 @@ def health():
 
 
 @app.post("/predict", response_model=PredictionResponse)
-async def predict(request: ReviewRequest):
+def predict(request: ReviewRequest):
     text = request.text.strip()
     if not text:
         raise HTTPException(status_code=422, detail="text field must not be empty")
 
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"} if HF_TOKEN else {}
+    inputs = app.state.tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
+    inputs.pop("token_type_ids", None)
 
-    async with httpx.AsyncClient(timeout=30) as client:
-        response = await client.post(
-            HF_API_URL,
-            headers=headers,
-            json={"inputs": text},
-        )
+    with torch.no_grad():
+        logits = app.state.model(**inputs).logits
+    probs = torch.softmax(logits, dim=-1)[0].tolist()
 
-    if response.status_code != 200:
-        raise HTTPException(status_code=502, detail=f"HF Inference API error: {response.text}")
-
-    # HF returns [[{"label": "pos", "score": 0.97}, {"label": "neg", "score": 0.03}]]
-    scores = {item["label"]: item["score"] for item in response.json()[0]}
-    label  = max(scores, key=scores.get)
+    id2label = app.state.model.config.id2label
+    scores   = {id2label[i]: float(p) for i, p in enumerate(probs)}
+    label    = max(scores, key=scores.get)
 
     return PredictionResponse(
         label=label,
